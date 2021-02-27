@@ -1,7 +1,5 @@
 package gophysics
 
-import "math"
-
 type GravitySource interface {
 	getPotentialEnergy(BodyState) float64
 	getAcceleration(BodyState) Acceleration
@@ -47,15 +45,15 @@ func (l LinearGravitySource) getOtherY() float64 {
 
 func (s LinearGravitySource) getAcceleration(b BodyState) Acceleration {
 
-	normalizedAcceleration := perpendicularDecomposition(s.line, Point{b.X, b.Y})
+	normalizedAcceleration, err := perpendicularDecomposition(s.line, Point{b.X, b.Y})
 
-	// Quebrar em componentes X e Y
-	acceleration := Acceleration{GRAVITY * normalizedAcceleration.X1, GRAVITY * normalizedAcceleration.Y1}
-
-	// Edge cases, possibly if body is inside gravity source
-	if math.IsNaN(normalizedAcceleration.X1) || math.IsNaN(normalizedAcceleration.Y1) {
+	if err != nil {
 		return Acceleration{0, 0}
 	}
+
+	// Multiplicar vetor normal pela intensidade da gravidade
+	acceleration := Acceleration{GRAVITY * normalizedAcceleration.X1, GRAVITY * normalizedAcceleration.Y1}
+
 	return acceleration
 }
 

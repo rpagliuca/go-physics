@@ -1,6 +1,9 @@
 package gophysics
 
-import "math"
+import (
+	"errors"
+	"math"
+)
 
 func perpendicularLine(l Line) Line {
 	//Rotation by 90º
@@ -14,7 +17,7 @@ func normalizeLine(l Line) Line {
 	return Line{0, 0, (l.X1 - l.X0) / magnitude, (l.Y1 - l.Y0) / magnitude}
 }
 
-func perpendicularDecomposition(line Line, point Point) Line {
+func perpendicularDecomposition(line Line, point Point) (Line, error) {
 	x := 0.0
 	y := 0.0
 
@@ -39,7 +42,14 @@ func perpendicularDecomposition(line Line, point Point) Line {
 		y = r1.calculateY(x)
 	}
 
-	return normalizeLine(Line{point.X, point.Y, x, y})
+	normalized := normalizeLine(Line{point.X, point.Y, x, y})
+
+	// Edge case
+	if math.IsNaN(normalized.X1) || math.IsNaN(normalized.Y1) {
+		return Line{0, 0, 0, 0}, errors.New("Failed calculating perpendicular line from point to line. Perhaps the point is on the line.")
+	}
+
+	return normalized, nil
 }
 
 type Line struct {
