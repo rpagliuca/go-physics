@@ -36,7 +36,7 @@ func TestHorizontalLinePerpendicularDecomposition(t *testing.T) {
 
 	// Test horizontal line
 	for _, c := range cases {
-		got, err := perpendicularDecomposition(right, c.point)
+		got, err := PerpendicularDecomposition(right, c.point)
 		assert.Nil(t, err)
 		assert.Equal(t, got, c.expected)
 	}
@@ -73,7 +73,7 @@ func TestVerticalLinePerpendicularDecomposition(t *testing.T) {
 
 	// Test vertical line
 	for _, c := range cases {
-		got, err := perpendicularDecomposition(up, c.point)
+		got, err := PerpendicularDecomposition(up, c.point)
 		assert.Nil(t, err)
 		assert.Equal(t, got, c.expected)
 	}
@@ -102,8 +102,8 @@ func TestDiagonalLinePerpendicularDecomposition(t *testing.T) {
 
 	// Test diagonal line
 	for _, c := range cases {
-		got, err := perpendicularDecomposition(diagonal, c.point)
+		got, err := PerpendicularDecomposition(diagonal, c.point)
 		assert.Nil(t, err)
-		assert.Equal(t, got, normalizeLine(c.expected))
+		assert.Equal(t, got, NormalizeLine(c.expected))
 	}
 }

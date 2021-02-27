@@ -1,51 +1,51 @@
 package gophysics
 
 type GravitySource interface {
-	getPotentialEnergy(BodyState) float64
-	getAcceleration(BodyState) Acceleration
-	getX() float64
-	getY() float64
-	getOtherX() float64
-	getOtherY() float64
-	getWidth() float64
-	updateCenter(x, y int)
+	GetPotentialEnergy(BodyState) float64
+	GetAcceleration(BodyState) Acceleration
+	GetX() float64
+	GetY() float64
+	GetOtherX() float64
+	GetOtherY() float64
+	GetWidth() float64
+	UpdateCenter(x, y int)
 }
 
 type LinearGravitySource struct {
-	line Line
+	Line Line
 }
 
-func (LinearGravitySource) getPotentialEnergy(BodyState) float64 {
+func (LinearGravitySource) GetPotentialEnergy(BodyState) float64 {
 	return 0
 }
 
-func (*LinearGravitySource) updateCenter(x, y int) {
+func (*LinearGravitySource) UpdateCenter(x, y int) {
 	// Do nothing
 }
 
-func (LinearGravitySource) getWidth() float64 {
+func (LinearGravitySource) GetWidth() float64 {
 	return SCREEN_WIDTH
 }
 
-func (l LinearGravitySource) getX() float64 {
-	return l.line.X0
+func (l LinearGravitySource) GetX() float64 {
+	return l.Line.X0
 }
 
-func (l LinearGravitySource) getY() float64 {
-	return l.line.Y0
+func (l LinearGravitySource) GetY() float64 {
+	return l.Line.Y0
 }
 
-func (l LinearGravitySource) getOtherX() float64 {
-	return l.line.X1
+func (l LinearGravitySource) GetOtherX() float64 {
+	return l.Line.X1
 }
 
-func (l LinearGravitySource) getOtherY() float64 {
-	return l.line.Y1
+func (l LinearGravitySource) GetOtherY() float64 {
+	return l.Line.Y1
 }
 
-func (s LinearGravitySource) getAcceleration(b BodyState) Acceleration {
+func (s LinearGravitySource) GetAcceleration(b BodyState) Acceleration {
 
-	normalizedAcceleration, err := perpendicularDecomposition(s.line, Point{b.X, b.Y})
+	normalizedAcceleration, err := PerpendicularDecomposition(s.Line, Point{b.X, b.Y})
 
 	if err != nil {
 		return Acceleration{0, 0}
@@ -58,38 +58,38 @@ func (s LinearGravitySource) getAcceleration(b BodyState) Acceleration {
 }
 
 type PointGravitySource struct {
-	point Point
+	Point Point
 }
 
-func (p PointGravitySource) getPotentialEnergy(bodyState BodyState) float64 {
+func (p PointGravitySource) GetPotentialEnergy(bodyState BodyState) float64 {
 	return 0
 }
 
-func (p PointGravitySource) getAcceleration(bodyState BodyState) Acceleration {
-	return calculateCenterGravity(p.point, bodyState)
+func (p PointGravitySource) GetAcceleration(bodyState BodyState) Acceleration {
+	return calculateCenterGravity(p.Point, bodyState)
 }
 
-func (PointGravitySource) getWidth() float64 {
+func (PointGravitySource) GetWidth() float64 {
 	return BOX_SIZE
 }
 
-func (p PointGravitySource) getX() float64 {
-	return p.point.X - BOX_SIZE/2
+func (p PointGravitySource) GetX() float64 {
+	return p.Point.X - BOX_SIZE/2
 }
 
-func (p PointGravitySource) getY() float64 {
-	return p.point.Y
+func (p PointGravitySource) GetY() float64 {
+	return p.Point.Y
 }
 
-func (p PointGravitySource) getOtherX() float64 {
-	return p.point.X + BOX_SIZE/2
+func (p PointGravitySource) GetOtherX() float64 {
+	return p.Point.X + BOX_SIZE/2
 }
 
-func (p PointGravitySource) getOtherY() float64 {
-	return p.point.Y
+func (p PointGravitySource) GetOtherY() float64 {
+	return p.Point.Y
 }
 
-func (p *PointGravitySource) updateCenter(x, y int) {
-	p.point.X = float64(x)
-	p.point.Y = float64(y)
+func (p *PointGravitySource) UpdateCenter(x, y int) {
+	p.Point.X = float64(x)
+	p.Point.Y = float64(y)
 }

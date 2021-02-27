@@ -7,9 +7,9 @@ import (
 const GRAVITY = 9.8
 
 // TODO: Remove dependency on camera/viewport
-const SCREEN_WIDTH = 20
-const SCREEN_HEIGHT = 20
-const BOX_SIZE = 2
+const BOX_SIZE = 10
+const SCREEN_WIDTH = 320
+const SCREEN_HEIGHT = 240
 
 // TODO: Remove constant frame rate
 func fixAccelerationRate(a Acceleration) Acceleration {
@@ -19,7 +19,7 @@ func fixAccelerationRate(a Acceleration) Acceleration {
 func getAcceleration(bodyState BodyState, gravitySources []GravitySource) Acceleration {
 	acceleration := Acceleration{0, 0}
 	for i := range gravitySources {
-		newAcceleration := gravitySources[i].getAcceleration(bodyState)
+		newAcceleration := gravitySources[i].GetAcceleration(bodyState)
 		acceleration.AX += newAcceleration.AX
 		acceleration.AY += newAcceleration.AY
 	}
@@ -69,11 +69,11 @@ func getNextBodyState(state BodyState, acceleration Acceleration) BodyState {
 }
 
 func UpdateState(state State) State {
-	for i := range state.bodies {
-		bodyState := state.bodies[i]
-		acceleration := getAcceleration(bodyState, state.gravitySources)
+	for i := range state.Bodies {
+		bodyState := state.Bodies[i]
+		acceleration := getAcceleration(bodyState, state.GravitySources)
 		nextState := getNextBodyState(bodyState, fixAccelerationRate(acceleration))
-		state.bodies[i] = nextState
+		state.Bodies[i] = nextState
 	}
 	return state
 }
@@ -91,6 +91,8 @@ type BodyState struct {
 }
 
 type State struct {
-	bodies         []BodyState
-	gravitySources []GravitySource
+	ViewportWidth  int
+	ViewportHeight int
+	Bodies         []BodyState
+	GravitySources []GravitySource
 }
