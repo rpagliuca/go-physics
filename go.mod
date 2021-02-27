@@ -1,4 +1,4 @@
-module gophysics
+module github.com/rpagliuca/go-physics
 
 go 1.14
 
