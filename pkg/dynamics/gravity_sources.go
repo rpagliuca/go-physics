@@ -1,6 +1,6 @@
 package dynamics
 
-import "github.com/rpagliuca/go-physics/pkg/gophysics/algebra"
+import "github.com/rpagliuca/go-physics/pkg/algebra"
 
 type GravitySource interface {
 	GetPotentialEnergy(BodyState) float64

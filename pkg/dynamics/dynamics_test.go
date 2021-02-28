@@ -3,7 +3,7 @@ package dynamics
 import (
 	"testing"
 
-	"github.com/rpagliuca/go-physics/pkg/gophysics/algebra"
+	"github.com/rpagliuca/go-physics/pkg/algebra"
 	"github.com/stretchr/testify/assert"
 )
 
