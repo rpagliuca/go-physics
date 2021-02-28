@@ -1,4 +1,4 @@
-package gophysics
+package dynamics
 
 func saveGlobals() []float64 {
 	return []float64{

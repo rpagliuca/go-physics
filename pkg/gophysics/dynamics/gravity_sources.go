@@ -1,4 +1,4 @@
-package gophysics
+package dynamics
 
 import "github.com/rpagliuca/go-physics/pkg/gophysics/algebra"
 
@@ -54,19 +54,14 @@ func (l LinearGravitySource) GetOtherY() float64 {
 }
 
 func (s LinearGravitySource) GetAcceleration(b BodyState) Acceleration {
-
-	normalizedAcceleration, err := algebra.PerpendicularDecomposition(
+	normalized, err := algebra.PerpendicularDecomposition(
 		s.Line, algebra.Point{b.X, b.Y},
 	)
-
 	if err != nil {
 		return Acceleration{0, 0}
 	}
-
-	// Multiplicar vetor normal pela intensidade da gravidade
-	acceleration := Acceleration{GRAVITY * normalizedAcceleration.X1, GRAVITY * normalizedAcceleration.Y1}
-
-	return acceleration
+	acc := Acceleration{GRAVITY * normalized.X1, GRAVITY * normalized.Y1}
+	return acc
 }
 
 type PointGravitySource struct {
@@ -85,7 +80,10 @@ func (p PointGravitySource) GetPotentialEnergy(bodyState BodyState) float64 {
 }
 
 func (p PointGravitySource) GetAcceleration(bodyState BodyState) Acceleration {
-	return calculateCenterGravity(p.Point, bodyState)
+	vector := algebra.Line{bodyState.X, bodyState.Y, p.Point.X, p.Point.Y}
+	normalized := algebra.NormalizeLine(vector)
+	acc := Acceleration{GRAVITY * normalized.X1, GRAVITY * normalized.Y1}
+	return acc
 }
 
 func (PointGravitySource) GetWidth() float64 {

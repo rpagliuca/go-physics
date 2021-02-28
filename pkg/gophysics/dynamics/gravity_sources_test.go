@@ -1,4 +1,4 @@
-package gophysics
+package dynamics
 
 import (
 	"github.com/stretchr/testify/assert"
