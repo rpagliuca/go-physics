@@ -1,5 +1,7 @@
 package gophysics
 
+import "github.com/rpagliuca/go-physics/pkg/gophysics/algebra"
+
 type GravitySource interface {
 	GetPotentialEnergy(BodyState) float64
 	GetAcceleration(BodyState) Acceleration
@@ -13,7 +15,7 @@ type GravitySource interface {
 }
 
 type LinearGravitySource struct {
-	Line Line
+	Line algebra.Line
 }
 
 func (l LinearGravitySource) Clone() GravitySource {
@@ -53,7 +55,9 @@ func (l LinearGravitySource) GetOtherY() float64 {
 
 func (s LinearGravitySource) GetAcceleration(b BodyState) Acceleration {
 
-	normalizedAcceleration, err := PerpendicularDecomposition(s.Line, Point{b.X, b.Y})
+	normalizedAcceleration, err := algebra.PerpendicularDecomposition(
+		s.Line, algebra.Point{b.X, b.Y},
+	)
 
 	if err != nil {
 		return Acceleration{0, 0}
@@ -66,7 +70,7 @@ func (s LinearGravitySource) GetAcceleration(b BodyState) Acceleration {
 }
 
 type PointGravitySource struct {
-	Point Point
+	Point algebra.Point
 }
 
 func (p *PointGravitySource) Clone() GravitySource {

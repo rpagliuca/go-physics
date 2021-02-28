@@ -2,6 +2,8 @@ package gophysics
 
 import (
 	"math"
+
+	"github.com/rpagliuca/go-physics/pkg/gophysics/algebra"
 )
 
 // TODO: Remove constant frame rate and gravity
@@ -27,7 +29,7 @@ func getAcceleration(bodyState BodyState, gravitySources []GravitySource) Accele
 	return acceleration
 }
 
-func calculateCenterGravity(point Point, state BodyState) Acceleration {
+func calculateCenterGravity(point algebra.Point, state BodyState) Acceleration {
 	// TODO merge this code with generic line gravity source
 	center := []float64{point.X, point.Y}
 	pos := []float64{state.X, state.Y}

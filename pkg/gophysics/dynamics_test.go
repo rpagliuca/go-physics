@@ -1,8 +1,10 @@
 package gophysics
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/rpagliuca/go-physics/pkg/gophysics/algebra"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLinearGravitySource(t *testing.T) {
@@ -24,7 +26,7 @@ func TestLinearGravitySource(t *testing.T) {
 			},
 		},
 		[]GravitySource{
-			&LinearGravitySource{Line{0, 0, 10, 0}},
+			&LinearGravitySource{algebra.Line{0, 0, 10, 0}},
 		},
 	}
 
@@ -55,7 +57,7 @@ func TestPointGravitySource(t *testing.T) {
 			},
 		},
 		[]GravitySource{
-			&PointGravitySource{Point{5, 5}},
+			&PointGravitySource{algebra.Point{5, 5}},
 		},
 	}
 

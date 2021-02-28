@@ -1,4 +1,4 @@
-package gophysics
+package algebra
 
 import (
 	"github.com/stretchr/testify/assert"
