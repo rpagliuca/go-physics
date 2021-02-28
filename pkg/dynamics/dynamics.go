@@ -1,7 +1,5 @@
 package dynamics
 
-import "math"
-
 // TODO: Remove constant frame rate and gravity
 var FRAME_RATE = 60.0
 var GRAVITY = 9.8
@@ -12,8 +10,7 @@ var SCREEN_WIDTH = 320.0
 var SCREEN_HEIGHT = 240.0
 
 func fixAccelerationRate(a Acceleration, frameRate float64) Acceleration {
-	factor := math.Pow(1, 1/frameRate)
-	return Acceleration{a.AX / factor, a.AY / factor}
+	return Acceleration{a.AX / frameRate, a.AY / frameRate}
 }
 
 func getAcceleration(bodyState BodyState, gravitySources []GravitySource) Acceleration {
