@@ -1,5 +1,7 @@
 package dynamics
 
+import "math"
+
 // TODO: Remove constant frame rate and gravity
 var FRAME_RATE = 60.0
 var GRAVITY = 9.8
@@ -9,8 +11,9 @@ var BOX_SIZE = 10.0
 var SCREEN_WIDTH = 320.0
 var SCREEN_HEIGHT = 240.0
 
-func fixAccelerationRate(a Acceleration) Acceleration {
-	return Acceleration{a.AX / FRAME_RATE, a.AY / FRAME_RATE}
+func fixAccelerationRate(a Acceleration, frameRate float64) Acceleration {
+	factor := math.Pow(1, 1/frameRate)
+	return Acceleration{a.AX / factor, a.AY / factor}
 }
 
 func getAcceleration(bodyState BodyState, gravitySources []GravitySource) Acceleration {
@@ -55,48 +58,8 @@ func UpdateState(state State) State {
 	for i := range state.Bodies {
 		bodyState := state.Bodies[i]
 		acceleration := getAcceleration(bodyState, state.GravitySources)
-		nextState := getNextBodyState(bodyState, fixAccelerationRate(acceleration))
+		nextState := getNextBodyState(bodyState, fixAccelerationRate(acceleration, FRAME_RATE))
 		state.Bodies[i] = nextState
 	}
 	return state
-}
-
-type Acceleration struct {
-	AX float64
-	AY float64
-}
-
-type BodyState struct {
-	X  float64
-	Y  float64
-	VX float64
-	VY float64
-}
-
-func (b BodyState) Clone() BodyState {
-	return b
-}
-
-type State struct {
-	ViewportWidth  int
-	ViewportHeight int
-	Bodies         []BodyState
-	GravitySources []GravitySource
-}
-
-func (s State) Clone() State {
-	bodies := []BodyState{}
-	for i := range s.Bodies {
-		bodies = append(bodies, s.Bodies[i].Clone())
-	}
-	gravitySources := []GravitySource{}
-	for i := range s.GravitySources {
-		gravitySources = append(gravitySources, s.GravitySources[i].Clone())
-	}
-	return State{
-		s.ViewportWidth,
-		s.ViewportHeight,
-		bodies,
-		gravitySources,
-	}
 }
