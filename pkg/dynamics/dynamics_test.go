@@ -35,7 +35,7 @@ func TestLinearGravitySource(t *testing.T) {
 	s1 := UpdateState(s0.Clone())
 
 	assert.Equal(t, 6.0, s1.Bodies[0].X)
-	assert.Equal(t, -0.99, s1.Bodies[0].VY)
+	assert.Equal(t, -1.0, s1.Bodies[0].VY)
 }
 
 func TestPointGravitySource(t *testing.T) {
@@ -58,10 +58,10 @@ func TestPointGravitySource(t *testing.T) {
 	s1 := UpdateState(s0.Clone())
 
 	assert.Equal(t, 6.0, s1.Bodies[0].X)
-	assert.Equal(t, -0.99, s1.Bodies[0].VY)
+	assert.Equal(t, -1.0, s1.Bodies[0].VY)
 
 	s2 := UpdateState(s1.Clone())
 
 	assert.NotEqual(t, 7.0, s2.Bodies[0].X)
-	assert.Less(t, s2.Bodies[0].VY, -0.99)
+	assert.Less(t, s2.Bodies[0].VY, -1.0)
 }
