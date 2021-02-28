@@ -15,11 +15,13 @@ type GravitySource interface {
 }
 
 type LinearGravitySource struct {
-	Line algebra.Line
+	Settings Settings
+	Line     algebra.Line
 }
 
 func (l LinearGravitySource) Clone() GravitySource {
 	other := LinearGravitySource{
+		l.Settings.Clone(),
 		l.Line,
 	}
 	return GravitySource(&other)
@@ -60,16 +62,21 @@ func (s LinearGravitySource) GetAcceleration(b BodyState) Acceleration {
 	if err != nil {
 		return Acceleration{0, 0}
 	}
-	acc := Acceleration{GRAVITY * normalized.X1, GRAVITY * normalized.Y1}
+	acc := Acceleration{
+		s.Settings.GravityAcceleration * normalized.X1,
+		s.Settings.GravityAcceleration * normalized.Y1,
+	}
 	return acc
 }
 
 type PointGravitySource struct {
-	Point algebra.Point
+	Settings Settings
+	Point    algebra.Point
 }
 
 func (p *PointGravitySource) Clone() GravitySource {
 	other := PointGravitySource{
+		p.Settings.Clone(),
 		p.Point,
 	}
 	return GravitySource(&other)
@@ -82,16 +89,16 @@ func (p PointGravitySource) GetPotentialEnergy(bodyState BodyState) float64 {
 func (p PointGravitySource) GetAcceleration(bodyState BodyState) Acceleration {
 	vector := algebra.Line{bodyState.X, bodyState.Y, p.Point.X, p.Point.Y}
 	normalized := algebra.NormalizeLine(vector)
-	acc := Acceleration{GRAVITY * normalized.X1, GRAVITY * normalized.Y1}
+	acc := Acceleration{p.Settings.GravityAcceleration * normalized.X1, p.Settings.GravityAcceleration * normalized.Y1}
 	return acc
 }
 
-func (PointGravitySource) GetWidth() float64 {
-	return BOX_SIZE
+func (p PointGravitySource) GetWidth() float64 {
+	return p.Settings.ViewportBoxSize
 }
 
 func (p PointGravitySource) GetX() float64 {
-	return p.Point.X - BOX_SIZE/2
+	return p.Point.X - p.Settings.ViewportBoxSize/2
 }
 
 func (p PointGravitySource) GetY() float64 {
@@ -99,7 +106,7 @@ func (p PointGravitySource) GetY() float64 {
 }
 
 func (p PointGravitySource) GetOtherX() float64 {
-	return p.Point.X + BOX_SIZE/2
+	return p.Point.X + p.Settings.ViewportBoxSize/2
 }
 
 func (p PointGravitySource) GetOtherY() float64 {

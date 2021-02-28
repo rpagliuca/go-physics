@@ -7,16 +7,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var SETTINGS = Settings{
+	GravityAcceleration: 1,
+	DeltaTime:           1,
+	ViewportHeight:      1000,
+	ViewportWidth:       1000,
+	ViewportBoxSize:     10,
+}
+
 func TestLinearGravitySource(t *testing.T) {
 
-	globals := saveGlobals()
-
-	GRAVITY = 1
-	FRAME_RATE = 1
-
 	s0 := State{
-		10,
-		10,
+		SETTINGS,
 		[]BodyState{
 			{
 				X:  5,
@@ -26,7 +28,7 @@ func TestLinearGravitySource(t *testing.T) {
 			},
 		},
 		[]GravitySource{
-			&LinearGravitySource{algebra.Line{0, 0, 10, 0}},
+			&LinearGravitySource{SETTINGS, algebra.Line{0, 0, 10, 0}},
 		},
 	}
 
@@ -34,20 +36,12 @@ func TestLinearGravitySource(t *testing.T) {
 
 	assert.Equal(t, 6.0, s1.Bodies[0].X)
 	assert.Equal(t, -0.99, s1.Bodies[0].VY)
-
-	restoreGlobals(globals)
 }
 
 func TestPointGravitySource(t *testing.T) {
 
-	globals := saveGlobals()
-
-	GRAVITY = 1
-	FRAME_RATE = 1
-
 	s0 := State{
-		10,
-		10,
+		SETTINGS,
 		[]BodyState{
 			{
 				X:  5,
@@ -57,7 +51,7 @@ func TestPointGravitySource(t *testing.T) {
 			},
 		},
 		[]GravitySource{
-			&PointGravitySource{algebra.Point{5, 5}},
+			&PointGravitySource{SETTINGS, algebra.Point{5, 5}},
 		},
 	}
 
@@ -70,6 +64,4 @@ func TestPointGravitySource(t *testing.T) {
 
 	assert.NotEqual(t, 7.0, s2.Bodies[0].X)
 	assert.Less(t, s2.Bodies[0].VY, -0.99)
-
-	restoreGlobals(globals)
 }

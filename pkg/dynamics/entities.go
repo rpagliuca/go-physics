@@ -17,8 +17,7 @@ func (b BodyState) Clone() BodyState {
 }
 
 type State struct {
-	ViewportWidth  int
-	ViewportHeight int
+	Settings       Settings
 	Bodies         []BodyState
 	GravitySources []GravitySource
 }
@@ -33,9 +32,20 @@ func (s State) Clone() State {
 		gravitySources = append(gravitySources, s.GravitySources[i].Clone())
 	}
 	return State{
-		s.ViewportWidth,
-		s.ViewportHeight,
+		s.Settings.Clone(),
 		bodies,
 		gravitySources,
 	}
+}
+
+type Settings struct {
+	ViewportWidth       float64
+	ViewportHeight      float64
+	ViewportBoxSize     float64
+	GravityAcceleration float64
+	DeltaTime           float64
+}
+
+func (s Settings) Clone() Settings {
+	return s
 }

@@ -1,17 +1,6 @@
 package dynamics
 
-// TODO: Remove constant frame rate and gravity
-var FRAME_RATE = 60.0
-var GRAVITY = 9.8
-
-// TODO: Remove dependency on camera/viewport
-var BOX_SIZE = 10.0
-var SCREEN_WIDTH = 320.0
-var SCREEN_HEIGHT = 240.0
-
-func fixAccelerationRate(a Acceleration, frameRate float64) Acceleration {
-	return Acceleration{a.AX / frameRate, a.AY / frameRate}
-}
+import "fmt"
 
 func getAcceleration(bodyState BodyState, gravitySources []GravitySource) Acceleration {
 	acceleration := Acceleration{0, 0}
@@ -23,23 +12,23 @@ func getAcceleration(bodyState BodyState, gravitySources []GravitySource) Accele
 	return acceleration
 }
 
-func getNextBodyState(state BodyState, acceleration Acceleration) BodyState {
+func getNextBodyState(state BodyState, acceleration Acceleration, settings Settings) BodyState {
 	// TODO implement Runge-Kutta
 	nextBodyState := BodyState{}
-	nextBodyState.VX = state.VX + acceleration.AX
-	nextBodyState.VY = state.VY + acceleration.AY
+	nextBodyState.VX = state.VX + acceleration.AX*settings.DeltaTime
+	nextBodyState.VY = state.VY + acceleration.AY*settings.DeltaTime
 	nextBodyState.X = state.X + (state.VX+nextBodyState.VX)/2
 	nextBodyState.Y = state.Y + (state.VY+nextBodyState.VY)/2
-	if nextBodyState.Y > SCREEN_HEIGHT-BOX_SIZE {
-		nextBodyState.Y = SCREEN_HEIGHT - BOX_SIZE
+	if nextBodyState.Y > settings.ViewportHeight-settings.ViewportBoxSize {
+		nextBodyState.Y = settings.ViewportHeight - settings.ViewportBoxSize
 		nextBodyState.VY = -0.95 * state.VY
 	}
 	if nextBodyState.Y < 0 {
 		nextBodyState.Y = 0
 		nextBodyState.VY = -0.95 * state.VY
 	}
-	if nextBodyState.X > SCREEN_WIDTH-BOX_SIZE {
-		nextBodyState.X = SCREEN_WIDTH - BOX_SIZE
+	if nextBodyState.X > settings.ViewportWidth-settings.ViewportBoxSize {
+		nextBodyState.X = settings.ViewportWidth - settings.ViewportBoxSize
 		nextBodyState.VX = -0.95 * state.VX
 	}
 	if nextBodyState.X < 0 {
@@ -54,8 +43,11 @@ func getNextBodyState(state BodyState, acceleration Acceleration) BodyState {
 func UpdateState(state State) State {
 	for i := range state.Bodies {
 		bodyState := state.Bodies[i]
+		fmt.Println("bodyState", bodyState)
 		acceleration := getAcceleration(bodyState, state.GravitySources)
-		nextState := getNextBodyState(bodyState, fixAccelerationRate(acceleration, FRAME_RATE))
+		fmt.Println("acceleration", acceleration)
+		nextState := getNextBodyState(bodyState, acceleration, state.Settings)
+		fmt.Println("nextState", nextState)
 		state.Bodies[i] = nextState
 	}
 	return state
