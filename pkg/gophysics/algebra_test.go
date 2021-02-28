@@ -107,3 +107,27 @@ func TestDiagonalLinePerpendicularDecomposition(t *testing.T) {
 		assert.Equal(t, got, NormalizeLine(c.expected))
 	}
 }
+
+func TestOverlappingLineAndPoint(t *testing.T) {
+	// Reference lines
+	right := Line{0, 0, 1, 0}
+
+	// Test cases
+	cases := []struct {
+		point Point
+	}{
+		{
+			Point{1, 0},
+		},
+		{
+			Point{2, 0},
+		},
+	}
+
+	// Test diagonal line
+	for _, c := range cases {
+		got, err := PerpendicularDecomposition(right, c.point)
+		assert.Equal(t, got, Line{0, 0, 0, 0})
+		assert.NotNil(t, err)
+	}
+}

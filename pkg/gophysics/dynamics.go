@@ -4,16 +4,17 @@ import (
 	"math"
 )
 
-const GRAVITY = 9.8
+// TODO: Remove constant frame rate and gravity
+var FRAME_RATE = 60.0
+var GRAVITY = 9.8
 
 // TODO: Remove dependency on camera/viewport
-const BOX_SIZE = 10
-const SCREEN_WIDTH = 320
-const SCREEN_HEIGHT = 240
+var BOX_SIZE = 10.0
+var SCREEN_WIDTH = 320.0
+var SCREEN_HEIGHT = 240.0
 
-// TODO: Remove constant frame rate
 func fixAccelerationRate(a Acceleration) Acceleration {
-	return Acceleration{a.AX / 60, a.AY / 60}
+	return Acceleration{a.AX / FRAME_RATE, a.AY / FRAME_RATE}
 }
 
 func getAcceleration(bodyState BodyState, gravitySources []GravitySource) Acceleration {
@@ -90,9 +91,30 @@ type BodyState struct {
 	VY float64
 }
 
+func (b BodyState) Clone() BodyState {
+	return b
+}
+
 type State struct {
 	ViewportWidth  int
 	ViewportHeight int
 	Bodies         []BodyState
 	GravitySources []GravitySource
+}
+
+func (s State) Clone() State {
+	bodies := []BodyState{}
+	for i := range s.Bodies {
+		bodies = append(bodies, s.Bodies[i].Clone())
+	}
+	gravitySources := []GravitySource{}
+	for i := range s.GravitySources {
+		gravitySources = append(gravitySources, s.GravitySources[i].Clone())
+	}
+	return State{
+		s.ViewportWidth,
+		s.ViewportHeight,
+		bodies,
+		gravitySources,
+	}
 }

@@ -9,10 +9,18 @@ type GravitySource interface {
 	GetOtherY() float64
 	GetWidth() float64
 	UpdateCenter(x, y int)
+	Clone() GravitySource
 }
 
 type LinearGravitySource struct {
 	Line Line
+}
+
+func (l LinearGravitySource) Clone() GravitySource {
+	other := LinearGravitySource{
+		l.Line,
+	}
+	return GravitySource(&other)
 }
 
 func (LinearGravitySource) GetPotentialEnergy(BodyState) float64 {
@@ -23,8 +31,8 @@ func (*LinearGravitySource) UpdateCenter(x, y int) {
 	// Do nothing
 }
 
-func (LinearGravitySource) GetWidth() float64 {
-	return SCREEN_WIDTH
+func (l LinearGravitySource) GetWidth() float64 {
+	return l.Line.Length()
 }
 
 func (l LinearGravitySource) GetX() float64 {
@@ -59,6 +67,13 @@ func (s LinearGravitySource) GetAcceleration(b BodyState) Acceleration {
 
 type PointGravitySource struct {
 	Point Point
+}
+
+func (p *PointGravitySource) Clone() GravitySource {
+	other := PointGravitySource{
+		p.Point,
+	}
+	return GravitySource(&other)
 }
 
 func (p PointGravitySource) GetPotentialEnergy(bodyState BodyState) float64 {

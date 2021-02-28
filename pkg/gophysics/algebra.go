@@ -13,7 +13,7 @@ func PerpendicularLine(l Line) Line {
 }
 
 func NormalizeLine(l Line) Line {
-	magnitude := math.Pow(math.Pow(l.X1-l.X0, 2)+math.Pow(l.Y1-l.Y0, 2), 0.5)
+	magnitude := l.Length()
 	return Line{0, 0, (l.X1 - l.X0) / magnitude, (l.Y1 - l.Y0) / magnitude}
 }
 
@@ -68,6 +68,10 @@ func (l Line) CoefficientB() float64 {
 
 func (l Line) CalculateY(x float64) float64 {
 	return x*l.CoefficientA() + l.CoefficientB()
+}
+
+func (l Line) Length() float64 {
+	return math.Pow(math.Pow(l.X1-l.X0, 2)+math.Pow(l.Y1-l.Y0, 2), 0.5)
 }
 
 type Point struct {
