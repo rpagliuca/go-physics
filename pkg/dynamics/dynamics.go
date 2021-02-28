@@ -1,7 +1,5 @@
 package dynamics
 
-import "fmt"
-
 func getAcceleration(bodyState BodyState, gravitySources []GravitySource) Acceleration {
 	acceleration := Acceleration{0, 0}
 	for i := range gravitySources {
@@ -43,11 +41,8 @@ func getNextBodyState(state BodyState, acceleration Acceleration, settings Setti
 func UpdateState(state State) State {
 	for i := range state.Bodies {
 		bodyState := state.Bodies[i]
-		fmt.Println("bodyState", bodyState)
 		acceleration := getAcceleration(bodyState, state.GravitySources)
-		fmt.Println("acceleration", acceleration)
 		nextState := getNextBodyState(bodyState, acceleration, state.Settings)
-		fmt.Println("nextState", nextState)
 		state.Bodies[i] = nextState
 	}
 	return state
