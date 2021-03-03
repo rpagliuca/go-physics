@@ -72,6 +72,7 @@ func runGame(grid wave.Grid) {
 	// Specify the window size as you like. Here, a doubled size is specified.
 	ebiten.SetWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT)
 	ebiten.SetWindowTitle("Physics")
+	ebiten.SetMaxTPS(20)
 	// Call ebiten.RunGame to start your game loop.
 
 	if err := ebiten.RunGame(game); err != nil {

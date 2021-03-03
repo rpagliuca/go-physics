@@ -1,7 +1,7 @@
 package wave
 
 const LEN = 100
-const D = 0.005
+const D = 0.06
 
 type Grid [3][LEN]float64
 
