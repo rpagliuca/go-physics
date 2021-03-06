@@ -1,7 +1,7 @@
 package wave3d
 
-const LEN = 20
-const D = 0.06
+const LEN = 100
+const D = 0.01
 
 type Grid [3][LEN][LEN]float64
 
@@ -30,24 +30,28 @@ func NextStep(grid Grid) Grid {
 		for j := 1; j < LEN-1; j++ {
 			// Combined equation
 			grid[2][i][j] =
-				D*
+				0.998 * (D*
 					(grid[1][i+1][j]-2.0*grid[1][i][j]+grid[1][i-1][j]) +
 					D*
 						(grid[1][i][j+1]-2.0*grid[1][i][j]+grid[1][i][j-1]) +
-					2.0*grid[1][i][j] - grid[0][i][j]
+					2.0*grid[1][i][j] - grid[0][i][j])
 		}
 	}
 
 	for i := 0; i < LEN; i++ {
 		// Sane boundaries
-		grid[2][i][0] = grid[2][i][1]
-		grid[2][i][LEN-1] = grid[2][i][LEN-2]
+		//grid[2][i][0] = grid[2][i][1]
+		//grid[2][i][LEN-1] = grid[2][i][LEN-2]
+		grid[2][i][0] = 0
+		grid[2][i][LEN-1] = 0
 	}
 
 	for j := 0; j < LEN; j++ {
 		// Sane boundaries
-		grid[2][0][j] = grid[2][1][j]
-		grid[2][LEN-1][j] = grid[2][LEN-2][j]
+		//grid[2][0][j] = grid[2][1][j]
+		//grid[2][LEN-1][j] = grid[2][LEN-2][j]
+		grid[2][0][j] = 0
+		grid[2][LEN-1][j] = 0
 	}
 
 	// Cycle temporal values
