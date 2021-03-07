@@ -1,7 +1,8 @@
 package wave3d
 
 const LEN = 100
-const D = 0.01
+const D = 0.003
+const ENERGY_CONSERVATION = 0.998
 
 type Grid [3][LEN][LEN]float64
 
@@ -30,7 +31,7 @@ func NextStep(grid Grid) Grid {
 		for j := 1; j < LEN-1; j++ {
 			// Combined equation
 			grid[2][i][j] =
-				0.998 * (D*
+				ENERGY_CONSERVATION * (D*
 					(grid[1][i+1][j]-2.0*grid[1][i][j]+grid[1][i-1][j]) +
 					D*
 						(grid[1][i][j+1]-2.0*grid[1][i][j]+grid[1][i][j-1]) +
