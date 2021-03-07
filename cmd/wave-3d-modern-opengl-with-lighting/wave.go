@@ -4,7 +4,6 @@ package main
 
 import (
 	"log"
-	"math"
 	"runtime"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
@@ -188,6 +187,8 @@ func programLoop(window *win.Window) error {
 
 func drawScene(grid wave.Grid, window *win.Window, camera *cam.FpsCamera, program *gfx.Program) {
 
+	var refinedGrid [wave.LEN * 2][wave.LEN * 2]float32
+
 	point := func(i, j int) mgl32.Vec3 {
 		x0 := i
 		y0 := grid[2][i][j]
@@ -195,62 +196,48 @@ func drawScene(grid wave.Grid, window *win.Window, camera *cam.FpsCamera, progra
 		return mgl32.Vec3{float32(x0), float32(y0), float32(z0)}
 	}
 
-	vertices := []float32{}
-	for i := 1; i < wave.LEN-1; i++ {
-		for j := 1; j < wave.LEN-1; j++ {
+	for i := 0; i < wave.LEN-2; i++ {
+		for j := 0; j < wave.LEN-2; j++ {
 
 			x := float32(i)
 			z := float32(j)
 
 			p_c := point(i, j)
+
 			p_t := point(i, j+1)
+			p_t2 := point(i, j+2)
 			p_tr := point(i+1, j+1)
+			p_tr2 := point(i+2, j+2)
 			p_r := point(i+1, j)
-			p_br := point(i+1, j-1)
-			p_b := point(i, j-1)
-			p_bl := point(i-1, j-1)
-			p_l := point(i-1, j)
-			p_tl := point(i-1, j+1)
+			p_r2 := point(i+2, j)
 
-			f_bct := interpolation(-1, p_b.Y(), 0, p_c.Y(), 1, p_t.Y())
-			f_lcr := interpolation(-1, p_l.Y(), 0, p_c.Y(), 1, p_r.Y())
-			f_bltr := interpolation(-1, p_bl.Y(), 0, p_c.Y(), 1, p_tr.Y())
-			f_brtl := interpolation(-1, p_br.Y(), 0, p_c.Y(), 1, p_tl.Y())
+			f_ct := quadratic(0, p_c.Y(), 1, p_t.Y(), 2, p_t2.Y())
+			f_cr := quadratic(0, p_c.Y(), 1, p_r.Y(), 2, p_r2.Y())
+			f_ctr := quadratic(0, p_c.Y(), 1, p_tr.Y(), 2, p_tr2.Y())
 
-			p_ct := mgl32.Vec3{x, f_bct(0.5), z + 0.5}
-			p_cr := mgl32.Vec3{x + 0.5, f_lcr(0.5), z}
-			p_cb := mgl32.Vec3{x, f_bct(-0.5), z - 0.5}
-			p_cl := mgl32.Vec3{x - 0.5, f_lcr(-0.5), z}
+			p_cr := mgl32.Vec3{x + 1, f_cr(0.5), z}
+			p_ct := mgl32.Vec3{x, f_ct(0.5), z + 1}
+			p_ctr := mgl32.Vec3{x + 1, f_ctr(0.5), z + 1}
 
-			diag := float32(math.Sqrt(1) * 0.5)
+			refinedGrid[2*i][2*j] = p_c.Y()
+			refinedGrid[2*i+1][2*j] = p_cr.Y()
+			refinedGrid[2*i][2*j+1] = p_ct.Y()
+			refinedGrid[2*i+1][2*j+1] = p_ctr.Y()
+		}
+	}
 
-			p_ctr := mgl32.Vec3{x + diag, f_bltr(0.5), z + diag}
-			p_cbl := mgl32.Vec3{x - diag, f_bltr(-0.5), z - diag}
+	refinedPoint := func(i, j int) mgl32.Vec3 {
+		x0 := i
+		y0 := refinedGrid[i][j]
+		z0 := j
+		return mgl32.Vec3{float32(x0), float32(y0), float32(z0)}
+	}
 
-			p_ctl := mgl32.Vec3{x - diag, f_brtl(0.5), z + diag}
-			p_cbr := mgl32.Vec3{x + diag, f_brtl(-0.5), z - diag}
-
-			vertices = addVertices(vertices, p_c, p_ct, p_cr)
-			vertices = addVertices(vertices, p_c, p_cr, p_cb)
-			vertices = addVertices(vertices, p_c, p_cb, p_cl)
-			vertices = addVertices(vertices, p_c, p_cl, p_ct)
-
-			//vertices = addVertices(vertices, p_ctl, p_t, p_ct)
-			vertices = addVertices(vertices, p_ctl, p_ct, p_cl)
-			//vertices = addVertices(vertices, p_ctl, p_cl, p_l)
-
-			//vertices = addVertices(vertices, p_ctr, p_r, p_cr)
-			vertices = addVertices(vertices, p_ctr, p_cr, p_ct)
-			//vertices = addVertices(vertices, p_ctr, p_ct, p_t)
-
-			//vertices = addVertices(vertices, p_cbr, p_b, p_cb)
-			vertices = addVertices(vertices, p_cbr, p_cb, p_cr)
-			//vertices = addVertices(vertices, p_cbr, p_cr, p_r)
-
-			//vertices = addVertices(vertices, p_cbl, p_cb, p_b)
-			//vertices = addVertices(vertices, p_cbl, p_l, p_cl)
-			vertices = addVertices(vertices, p_cbl, p_cl, p_cb)
-
+	vertices := []float32{}
+	for i := 0; i < wave.LEN*2-1; i++ {
+		for j := 0; j < wave.LEN*2-1; j++ {
+			vertices = addVertices(vertices, refinedPoint(i, j), refinedPoint(i+1, j+1), refinedPoint(i+1, j))
+			vertices = addVertices(vertices, refinedPoint(i, j), refinedPoint(i, j+1), refinedPoint(i+1, j+1))
 		}
 	}
 
@@ -265,7 +252,7 @@ func drawScene(grid wave.Grid, window *win.Window, camera *cam.FpsCamera, progra
 		100.0)
 
 	camTransform := camera.GetTransform()
-	worldTransform := mgl32.Scale3D(0.2, 0.2, 0.2)
+	worldTransform := mgl32.Scale3D(0.05, 0.2, 0.05)
 	gl.UniformMatrix4fv(program.GetUniformLocation("project"), 1, false, &projectTransform[0])
 	gl.UniformMatrix4fv(program.GetUniformLocation("view"), 1, false, &camTransform[0])
 	gl.UniformMatrix4fv(program.GetUniformLocation("world"), 1, false, &worldTransform[0])
@@ -311,4 +298,17 @@ func addVertices(vertices []float32, p0, p1, p2 mgl32.Vec3) []float32 {
 		p0.X(), p0.Y(), p0.Z(), n.X(), n.Y(), n.Z(),
 	)
 	return vertices
+}
+
+func q(x float32) float32 {
+	return x * x
+}
+
+func quadratic(x0, y0, x1, y1, x2, y2 float32) func(float32) float32 {
+	b := ((y2-y0)*(q(x1)-q(x0)) - (y1-y0)*(q(x2)*q(x0))) / ((x2-x0)*(q(x1)-q(x0)) + (x1-x0)*(q(x2)-q(x0)))
+	a := (y2 - y0 - b*(x2-x0)) / (q(x2) - q(x0))
+	c := y2 - a*q(x2) - b*x2
+	return func(x float32) float32 {
+		return a*q(x) + b*x + c
+	}
 }
