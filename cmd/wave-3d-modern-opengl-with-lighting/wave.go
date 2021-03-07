@@ -4,6 +4,7 @@ package main
 
 import (
 	"log"
+	"math"
 	"runtime"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
@@ -194,36 +195,61 @@ func drawScene(grid wave.Grid, window *win.Window, camera *cam.FpsCamera, progra
 		return mgl32.Vec3{float32(x0), float32(y0), float32(z0)}
 	}
 
-	// p_0 and p_1 clockwise
-	normal := func(p_center, p_0, p_1 mgl32.Vec3) mgl32.Vec3 {
-		return (p_0.Sub(p_center)).Cross(p_1.Sub(p_center)).Normalize().Mul(-1.0)
-	}
-
 	vertices := []float32{}
 	for i := 1; i < wave.LEN-1; i++ {
-		for j := 0; j < wave.LEN-1; j++ {
-			p_center := point(i, j)
-			p_right := point(i+1, j)
-			p_top := point(i, j+1)
-			p_topleft := point(i-1, j+1)
+		for j := 1; j < wave.LEN-1; j++ {
 
-			var n mgl32.Vec3
+			x := float32(i)
+			z := float32(j)
 
-			// Center/Top/Right
-			n = normal(p_center, p_top, p_right)
-			vertices = append(vertices,
-				p_top.X(), p_top.Y(), p_top.Z(), n.X(), n.Y(), n.Z(),
-				p_right.X(), p_right.Y(), p_right.Z(), n.X(), n.Y(), n.Z(),
-				p_center.X(), p_center.Y(), p_center.Z(), n.X(), n.Y(), n.Z(),
-			)
+			p_c := point(i, j)
+			p_t := point(i, j+1)
+			p_tr := point(i+1, j+1)
+			p_r := point(i+1, j)
+			p_br := point(i+1, j-1)
+			p_b := point(i, j-1)
+			p_bl := point(i-1, j-1)
+			p_l := point(i-1, j)
+			p_tl := point(i-1, j+1)
 
-			// Center/Top/Topleft
-			n = normal(p_center, p_topleft, p_top)
-			vertices = append(vertices,
-				p_top.X(), p_top.Y(), p_top.Z(), n.X(), n.Y(), n.Z(),
-				p_topleft.X(), p_topleft.Y(), p_topleft.Z(), n.X(), n.Y(), n.Z(),
-				p_center.X(), p_center.Y(), p_center.Z(), n.X(), n.Y(), n.Z(),
-			)
+			f_bct := interpolation(-1, p_b.Y(), 0, p_c.Y(), 1, p_t.Y())
+			f_lcr := interpolation(-1, p_l.Y(), 0, p_c.Y(), 1, p_r.Y())
+			f_bltr := interpolation(-1, p_bl.Y(), 0, p_c.Y(), 1, p_tr.Y())
+			f_brtl := interpolation(-1, p_br.Y(), 0, p_c.Y(), 1, p_tl.Y())
+
+			p_ct := mgl32.Vec3{x, f_bct(0.5), z + 0.5}
+			p_cr := mgl32.Vec3{x + 0.5, f_lcr(0.5), z}
+			p_cb := mgl32.Vec3{x, f_bct(-0.5), z - 0.5}
+			p_cl := mgl32.Vec3{x - 0.5, f_lcr(-0.5), z}
+
+			diag := float32(math.Sqrt(1) * 0.5)
+
+			p_ctr := mgl32.Vec3{x + diag, f_bltr(0.5), z + diag}
+			p_cbl := mgl32.Vec3{x - diag, f_bltr(-0.5), z - diag}
+
+			p_ctl := mgl32.Vec3{x - diag, f_brtl(0.5), z + diag}
+			p_cbr := mgl32.Vec3{x + diag, f_brtl(-0.5), z - diag}
+
+			vertices = addVertices(vertices, p_c, p_ct, p_cr)
+			vertices = addVertices(vertices, p_c, p_cr, p_cb)
+			vertices = addVertices(vertices, p_c, p_cb, p_cl)
+			vertices = addVertices(vertices, p_c, p_cl, p_ct)
+
+			//vertices = addVertices(vertices, p_ctl, p_t, p_ct)
+			vertices = addVertices(vertices, p_ctl, p_ct, p_cl)
+			//vertices = addVertices(vertices, p_ctl, p_cl, p_l)
+
+			//vertices = addVertices(vertices, p_ctr, p_r, p_cr)
+			vertices = addVertices(vertices, p_ctr, p_cr, p_ct)
+			//vertices = addVertices(vertices, p_ctr, p_ct, p_t)
+
+			//vertices = addVertices(vertices, p_cbr, p_b, p_cb)
+			vertices = addVertices(vertices, p_cbr, p_cb, p_cr)
+			//vertices = addVertices(vertices, p_cbr, p_cr, p_r)
+
+			//vertices = addVertices(vertices, p_cbl, p_cb, p_b)
+			//vertices = addVertices(vertices, p_cbl, p_l, p_cl)
+			vertices = addVertices(vertices, p_cbl, p_cl, p_cb)
 
 		}
 	}
@@ -246,7 +272,9 @@ func drawScene(grid wave.Grid, window *win.Window, camera *cam.FpsCamera, progra
 
 	gl.BindVertexArray(VAO)
 	//gl.DrawArrays(gl.TRIANGLES, int32(len(indices)), gl.UNSIGNED_INT, unsafe.Pointer(nil))
+	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)))
+	//gl.DrawArrays(gl.TRIANGLES, 0, 48)
 	gl.BindVertexArray(0)
 	clearVAOFunc()
 }
@@ -261,11 +289,26 @@ func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 	}
 }
 
-func interpolation(x1, y1, x2, y2, x3, y3 float64) func(float64) float64 {
-	return func(x float64) float64 {
+func interpolation(x1, y1, x2, y2, x3, y3 float32) func(float32) float32 {
+	return func(x float32) float32 {
 		t1 := y1 * (x - x2) * (x - x3) / ((x1 - x2) * (x1 - x3))
 		t2 := y2 * (x - x1) * (x - x3) / ((x2 - x1) * (x2 - x3))
 		t3 := y3 * (x - x1) * (x - x2) / ((x3 - x1) * (x3 - x2))
 		return t1 + t2 + t3
 	}
+}
+
+// p_0 and p_1 clockwise
+func normal(p_center, p_0, p_1 mgl32.Vec3) mgl32.Vec3 {
+	return (p_0.Sub(p_center)).Cross(p_1.Sub(p_center)).Normalize().Mul(-1.0)
+}
+
+func addVertices(vertices []float32, p0, p1, p2 mgl32.Vec3) []float32 {
+	n := normal(p0, p1, p2)
+	vertices = append(vertices,
+		p1.X(), p1.Y(), p1.Z(), n.X(), n.Y(), n.Z(),
+		p2.X(), p2.Y(), p2.Z(), n.X(), n.Y(), n.Z(),
+		p0.X(), p0.Y(), p0.Z(), n.X(), n.Y(), n.Z(),
+	)
+	return vertices
 }
