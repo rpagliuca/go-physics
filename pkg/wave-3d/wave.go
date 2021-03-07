@@ -1,8 +1,8 @@
 package wave3d
 
 const LEN = 100
-const D = 0.003
-const ENERGY_CONSERVATION = 0.998
+const D = 0.001
+const ENERGY_CONSERVATION = 1.0
 
 type Grid [3][LEN][LEN]float64
 

@@ -161,7 +161,7 @@ func programLoop(window *win.Window) error {
 	//gl.DepthFunc(gl.LESS)
 	//gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-	camera := cam.NewFpsCamera(mgl32.Vec3{2.0, -6.0, 2.0}, mgl32.Vec3{0, 1, 0}, 45, 40, window.InputManager())
+	camera := cam.NewFpsCamera(mgl32.Vec3{2.0, -2.0, 2.0}, mgl32.Vec3{0, 1, 0}, 45, 30, window.InputManager())
 
 	for !window.ShouldClose() {
 		window.StartFrame()
@@ -169,7 +169,9 @@ func programLoop(window *win.Window) error {
 
 		// perform rendering
 		//gl.ClearColor(0.2, 0.5, 0.5, 1.0)
-		gl.ClearColor(135.0/255.0, 206.0/255.0, 250.0/255.0, 1.0)
+		//gl.ClearColor(135.0/255.0, 206.0/255.0, 250.0/255.0, 1.0)
+		gl.ClearColor(0.1, 0.1, 0.5, 1.0)
+		//gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		gl.Clear(gl.DEPTH_BUFFER_BIT)
 
@@ -237,7 +239,7 @@ func drawScene(grid wave.Grid, window *win.Window, camera *cam.FpsCamera, progra
 		100.0)
 
 	camTransform := camera.GetTransform()
-	worldTransform := mgl32.Scale3D(0.2, 0.8, 0.2)
+	worldTransform := mgl32.Scale3D(0.2, 0.2, 0.2)
 	gl.UniformMatrix4fv(program.GetUniformLocation("project"), 1, false, &projectTransform[0])
 	gl.UniformMatrix4fv(program.GetUniformLocation("view"), 1, false, &camTransform[0])
 	gl.UniformMatrix4fv(program.GetUniformLocation("world"), 1, false, &worldTransform[0])
@@ -256,5 +258,14 @@ func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 	// which closes the application
 	if key == glfw.KeyEscape && action == glfw.Press {
 		window.SetShouldClose(true)
+	}
+}
+
+func interpolation(x1, y1, x2, y2, x3, y3 float64) func(float64) float64 {
+	return func(x float64) float64 {
+		t1 := y1 * (x - x2) * (x - x3) / ((x1 - x2) * (x1 - x3))
+		t2 := y2 * (x - x1) * (x - x3) / ((x2 - x1) * (x2 - x3))
+		t3 := y3 * (x - x1) * (x - x2) / ((x3 - x1) * (x3 - x2))
+		return t1 + t2 + t3
 	}
 }

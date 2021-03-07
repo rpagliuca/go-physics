@@ -23,19 +23,16 @@ uniform Light light;
 
 void main()
 {
-    vec3 orange = vec3(253.0f/255.0f, 106.0f/255.0f, 2.0f/255.0f);
-    vec3 white = vec3(1.0f, 0.5f, 0.0f);
-    vec3 darkblue = vec3(0.0f, 0.1f, 0.3f);
-    vec3 blue = vec3(0.5f, 0.5f, 0.5f);
+	vec3 blue = vec3(15.0f/255.0f, 68.0f/255.0f, 255.0f/255.0f) * 1;
 
 	// ambient
-	vec3 ambient = darkblue;
+	vec3 ambient = blue * 0.7;
 
 	// diffuse
 	vec3 norm = normalize(Normal);
 	vec3 dirToLight = normalize(LightPos - FragPos);
-	float lightNormalDiff = max(dot(norm, dirToLight), 0.0);
-	vec3 diffuse = blue * lightNormalDiff;
+	float lightNormalDiff = 0.5 * (dot(norm, dirToLight) + 1);
+	vec3 diffuse = vec3(0.0f, 0.3f, 0.7f) * 0.5 * lightNormalDiff;
 
 	vec3 viewPos = vec3(0.0f, 0.0f, 0.0f);
 
@@ -50,10 +47,11 @@ void main()
 	vec3 reflectDir = reflect(-dirToLight, norm);
 	float specphong = pow(max(dot(dirToView, reflectDir), 0.0), 16.0);
 
-	vec3 specular = specblinn * white;
+	//vec3 specular = specphong * vec3(-5.0f, 10.0f, -5.0f) * 1;
+	vec3 specular = specphong * vec3(1.0f, 0.3f, -1.0f) * 5;
 
     // Light attenuation over distance
-    float attenuation = 0.0006 * pow(dot(LightPos-FragPos, LightPos-FragPos), 0.5);
+    float attenuation = 0.00140 * pow(dot(LightPos-FragPos, LightPos-FragPos), 0.5);
     //attenuation = 1;
 
 	vec3 result = (diffuse + specular + ambient) / attenuation;

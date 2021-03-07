@@ -15,7 +15,7 @@ out vec3 LightPos;
 
 void main()
 {
-    vec3 lightWorld = vec3(500.0f, 40.0f, 500.0f);
+    vec3 lightWorld = vec3(500.0f, 100.0f, 500.0f);
 
     gl_Position = project * view * world * vec4(position, 1.0);
 
@@ -23,7 +23,7 @@ void main()
     // calculations in the fragment shader so that we know that the viewer position is (0,0,0)
     FragPos = vec3(view * world * vec4(position, 1.0));
 
-    //LightPos = vec3(view * lightWorld * vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    //LightPos = vec3(view * lightWorld * vec4(0.0f, 0.0f, 0.0f, 1.0f));
     LightPos = vec3(view * vec4(lightWorld, 1.0f));
 
     // transform the normals to the view space
