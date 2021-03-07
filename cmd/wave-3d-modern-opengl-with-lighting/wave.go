@@ -112,15 +112,17 @@ func programLoop(window *win.Window) error {
 
 	grid := wave.Grid{}
 
-	// Center wave
-	for i := 0; i < 6; i++ {
-		for j := 0; j < 6; j++ {
-			grid[0][wave.LEN/2-3+i][wave.LEN/2-3+j] = 10
+	/*
+		// Center wave
+		for i := 0; i < 6; i++ {
+			for j := 0; j < 6; j++ {
+				grid[0][wave.LEN/2-3+i][wave.LEN/2-3+j] = 10
+			}
 		}
-	}
+	*/
 
 	/*
-			// Side wave
+		// Side wave
 		for i := 0; i < wave.LEN; i++ {
 			for j := 0; j < 5; j++ {
 				grid[0][wave.LEN-1-j][i] = 2
@@ -128,14 +130,12 @@ func programLoop(window *win.Window) error {
 		}
 	*/
 
-	/*
-		// Corner wave
-		for i := 1; i < 10; i++ {
-			for j := 1; j < 10; j++ {
-				grid[0][wave.LEN-i][wave.LEN-j] = 5
-			}
+	// Corner wave
+	for i := 1; i < 10; i++ {
+		for j := 1; j < 10; j++ {
+			grid[0][wave.LEN-i][wave.LEN-j] = 5
 		}
-	*/
+	}
 
 	/*
 		// 2 corner waves
@@ -194,7 +194,7 @@ func drawScene(grid wave.Grid, window *win.Window, camera *cam.FpsCamera, progra
 
 	// p_0 and p_1 clockwise
 	normal := func(p_center, p_0, p_1 mgl32.Vec3) mgl32.Vec3 {
-		return (p_0.Sub(p_center)).Cross(p_1.Sub(p_center)).Normalize()
+		return (p_0.Sub(p_center)).Cross(p_1.Sub(p_center)).Normalize().Mul(-1.0)
 	}
 
 	vertices := []float32{}

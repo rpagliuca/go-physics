@@ -15,7 +15,7 @@ out vec3 LightPos;
 
 void main()
 {
-    vec3 lightWorld = vec3(500.0f, -200.0f, 500.0f);
+    vec3 lightWorld = vec3(500.0f, 40.0f, 500.0f);
 
     gl_Position = project * view * world * vec4(position, 1.0);
 
