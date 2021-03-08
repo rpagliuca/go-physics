@@ -3,8 +3,10 @@ package main
 /* Source: https://raw.githubusercontent.com/cstegel/opengl-samples-golang/master/basic-shaders/main.go */
 
 import (
+	"fmt"
 	"log"
 	"runtime"
+	"time"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -185,46 +187,21 @@ func programLoop(window *win.Window) error {
 	return nil
 }
 
-func drawScene(grid wave.Grid, window *win.Window, camera *cam.FpsCamera, program *gfx.Program) {
+func drawScene(waveGrid wave.Grid, window *win.Window, camera *cam.FpsCamera, program *gfx.Program) {
 
-	var refinedGrid [wave.LEN * 2][wave.LEN * 2]float32
+	grid := make([][]float64, len(waveGrid[2]))
 
-	point := func(i, j int) mgl32.Vec3 {
-		x0 := i
-		y0 := grid[2][i][j]
-		z0 := j
-		return mgl32.Vec3{float32(x0), float32(y0), float32(z0)}
+	for i := 0; i < len(grid); i++ {
+		grid[i] = make([]float64, len(grid))
 	}
 
-	for i := 0; i < wave.LEN-2; i++ {
-		for j := 0; j < wave.LEN-2; j++ {
-
-			x := float32(i)
-			z := float32(j)
-
-			p_c := point(i, j)
-
-			p_t := point(i, j+1)
-			p_t2 := point(i, j+2)
-			p_tr := point(i+1, j+1)
-			p_tr2 := point(i+2, j+2)
-			p_r := point(i+1, j)
-			p_r2 := point(i+2, j)
-
-			f_ct := quadratic(0, p_c.Y(), 1, p_t.Y(), 2, p_t2.Y())
-			f_cr := quadratic(0, p_c.Y(), 1, p_r.Y(), 2, p_r2.Y())
-			f_ctr := quadratic(0, p_c.Y(), 1, p_tr.Y(), 2, p_tr2.Y())
-
-			p_cr := mgl32.Vec3{x + 1, f_cr(0.5), z}
-			p_ct := mgl32.Vec3{x, f_ct(0.5), z + 1}
-			p_ctr := mgl32.Vec3{x + 1, f_ctr(0.5), z + 1}
-
-			refinedGrid[2*i][2*j] = p_c.Y()
-			refinedGrid[2*i+1][2*j] = p_cr.Y()
-			refinedGrid[2*i][2*j+1] = p_ct.Y()
-			refinedGrid[2*i+1][2*j+1] = p_ctr.Y()
+	for i := 0; i < len(grid); i++ {
+		for j := 0; j < len(grid); j++ {
+			grid[i][j] = waveGrid[2][i][j]
 		}
 	}
+
+	refinedGrid := refineGrid(refineGrid(grid))
 
 	refinedPoint := func(i, j int) mgl32.Vec3 {
 		x0 := i
@@ -234,12 +211,14 @@ func drawScene(grid wave.Grid, window *win.Window, camera *cam.FpsCamera, progra
 	}
 
 	vertices := []float32{}
-	for i := 0; i < wave.LEN*2-1; i++ {
-		for j := 0; j < wave.LEN*2-1; j++ {
+	start := time.Now().UnixNano()
+	for i := 0; i < len(refinedGrid)-1; i++ {
+		for j := 0; j < len(refinedGrid)-1; j++ {
 			vertices = addVertices(vertices, refinedPoint(i, j), refinedPoint(i+1, j+1), refinedPoint(i+1, j))
 			vertices = addVertices(vertices, refinedPoint(i, j), refinedPoint(i, j+1), refinedPoint(i+1, j+1))
 		}
 	}
+	fmt.Println("addVertices took milliseconds", (time.Now().UnixNano()-start)/1e6)
 
 	//VAO := createTriangleVAO(vertices, indices)
 	VAO, clearVAOFunc := createTriangleVAO(vertices, nil)
@@ -300,15 +279,52 @@ func addVertices(vertices []float32, p0, p1, p2 mgl32.Vec3) []float32 {
 	return vertices
 }
 
-func q(x float32) float32 {
+func q(x float64) float64 {
 	return x * x
 }
 
-func quadratic(x0, y0, x1, y1, x2, y2 float32) func(float32) float32 {
+func quadratic(x0, y0, x1, y1, x2, y2 float64) func(float64) float64 {
 	b := ((y2-y0)*(q(x1)-q(x0)) - (y1-y0)*(q(x2)*q(x0))) / ((x2-x0)*(q(x1)-q(x0)) + (x1-x0)*(q(x2)-q(x0)))
 	a := (y2 - y0 - b*(x2-x0)) / (q(x2) - q(x0))
 	c := y2 - a*q(x2) - b*x2
-	return func(x float32) float32 {
+	return func(x float64) float64 {
 		return a*q(x) + b*x + c
 	}
+}
+
+func refineGrid(grid [][]float64) [][]float64 {
+
+	// Initialize 2D slice
+	refinedGrid := make([][]float64, 2*len(grid))
+	for i := 0; i < len(refinedGrid); i++ {
+		refinedGrid[i] = make([]float64, 2*len(grid))
+	}
+
+	for i := 0; i < len(grid)-2; i++ {
+		for j := 0; j < len(grid)-2; j++ {
+
+			p_c := grid[i][j]
+
+			p_t := grid[i][j+1]
+			p_t2 := grid[i][j+2]
+			p_tr := grid[i+1][j+1]
+			p_tr2 := grid[i+2][j+2]
+			p_r := grid[i+1][j]
+			p_r2 := grid[i+2][j]
+
+			f_ct := quadratic(0, p_c, 1, p_t, 2, p_t2)
+			f_cr := quadratic(0, p_c, 1, p_r, 2, p_r2)
+			f_ctr := quadratic(0, p_c, 1, p_tr, 2, p_tr2)
+
+			p_cr := f_cr(0.5)
+			p_ct := f_ct(0.5)
+			p_ctr := f_ctr(0.5)
+
+			refinedGrid[2*i][2*j] = p_c
+			refinedGrid[2*i+1][2*j] = p_cr
+			refinedGrid[2*i][2*j+1] = p_ct
+			refinedGrid[2*i+1][2*j+1] = p_ctr
+		}
+	}
+	return refinedGrid
 }
