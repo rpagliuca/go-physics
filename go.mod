@@ -2,6 +2,8 @@ module github.com/rpagliuca/go-physics
 
 go 1.14
 
+replace github.com/rpagliuca/go-gl-helpers => /home/rafael/src/go-gl-helpers
+
 require (
 	github.com/cstegel/opengl-samples-golang v0.0.0-20180607031111-1ed56cc6485a
 	github.com/fogleman/gg v1.3.0

@@ -3,10 +3,9 @@ package main
 /* Source: https://raw.githubusercontent.com/cstegel/opengl-samples-golang/master/basic-shaders/main.go */
 
 import (
-	"fmt"
 	"log"
 	"runtime"
-	"time"
+	"sync"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -132,24 +131,24 @@ func programLoop(window *win.Window) error {
 		}
 	*/
 
-	// Corner wave
-	for i := 1; i < 10; i++ {
-		for j := 1; j < 10; j++ {
-			grid[0][wave.LEN-i][wave.LEN-j] = 5
-		}
-	}
-
 	/*
-		// 2 corner waves
-		for i := 10; i < 30; i++ {
-			for j := 10; j < 30; j++ {
-				if (i+j)*(i+j) < 800 {
-					grid[0][wave.LEN-i][wave.LEN-j] = 5
-					grid[0][wave.LEN-i][j] = 5
-				}
+		// Corner wave
+		for i := 5; i < 15; i++ {
+			for j := 5; j < 15; j++ {
+				grid[0][wave.LEN-i][wave.LEN-j] = 5
 			}
 		}
 	*/
+
+	// 2 corner waves
+	for i := 10; i < 30; i++ {
+		for j := 10; j < 30; j++ {
+			if (i+j)*(i+j) < 800 {
+				grid[0][wave.LEN-i][wave.LEN-j] = 5
+				grid[0][wave.LEN-i][j] = 5
+			}
+		}
+	}
 
 	grid[1] = grid[0]
 	grid[2] = grid[0]
@@ -166,13 +165,18 @@ func programLoop(window *win.Window) error {
 	camera := cam.NewFpsCamera(mgl32.Vec3{2.0, -2.0, 2.0}, mgl32.Vec3{0, 1, 0}, 45, 30, window.InputManager())
 
 	for !window.ShouldClose() {
+
+		//start := time.Now().UnixNano()
 		window.StartFrame()
 		camera.Update(window.SinceLastFrame())
 
 		// perform rendering
 		//gl.ClearColor(0.2, 0.5, 0.5, 1.0)
 		//gl.ClearColor(135.0/255.0, 206.0/255.0, 250.0/255.0, 1.0)
-		gl.ClearColor(0.1, 0.1, 0.5, 1.0)
+		gl.ClearColor(0.1, 0.0, 0.3, 1.0)
+		//glClearColor(255, 225, 175)
+		//glClearColor(15, 68, 255)
+		//glClearColor(163, 38, 82)
 		//gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		gl.Clear(gl.DEPTH_BUFFER_BIT)
@@ -182,12 +186,16 @@ func programLoop(window *win.Window) error {
 		// end of draw loop
 
 		grid = wave.NextStep(grid)
+		//fmt.Println("window.shouldclose loop took milliseconds", (time.Now().UnixNano()-start)/1e6)
+		//fmt.Println("current fps", math.Round(1.0/(float64(time.Now().UnixNano()-start)/1.0e9)))
 	}
 
 	return nil
 }
 
 func drawScene(waveGrid wave.Grid, window *win.Window, camera *cam.FpsCamera, program *gfx.Program) {
+
+	//start := time.Now().UnixNano()
 
 	grid := make([][]float64, len(waveGrid[2]))
 
@@ -201,7 +209,10 @@ func drawScene(waveGrid wave.Grid, window *win.Window, camera *cam.FpsCamera, pr
 		}
 	}
 
-	refinedGrid := refineGrid(refineGrid(grid))
+	refinedGrid := grid
+	refinedGrid = refineGrid(grid)
+	//refinedGrid = refineGrid(refinedGrid)
+	//refinedGrid = refineGrid(refinedGrid)
 
 	refinedPoint := func(i, j int) mgl32.Vec3 {
 		x0 := i
@@ -209,16 +220,29 @@ func drawScene(waveGrid wave.Grid, window *win.Window, camera *cam.FpsCamera, pr
 		z0 := j
 		return mgl32.Vec3{float32(x0), float32(y0), float32(z0)}
 	}
+	//fmt.Println("half1 took milliseconds", (time.Now().UnixNano()-start)/1e6)
 
-	vertices := []float32{}
-	start := time.Now().UnixNano()
-	for i := 0; i < len(refinedGrid)-1; i++ {
-		for j := 0; j < len(refinedGrid)-1; j++ {
-			vertices = addVertices(vertices, refinedPoint(i, j), refinedPoint(i+1, j+1), refinedPoint(i+1, j))
-			vertices = addVertices(vertices, refinedPoint(i, j), refinedPoint(i, j+1), refinedPoint(i+1, j+1))
-		}
+	//start = time.Now().UnixNano()
+	vertices := make([]float32, len(refinedGrid)*len(refinedGrid)*2*3*6)
+
+	var wg sync.WaitGroup
+
+	for h := 0; h < len(refinedGrid)-1; h++ {
+		wg.Add(1)
+		go func(i int) {
+			for j := 0; j < len(refinedGrid)-1; j++ {
+				pos := 36 * (i*len(refinedGrid) + j)
+				vertices = addVertices(vertices, pos, refinedPoint(i, j), refinedPoint(i+1, j+1), refinedPoint(i+1, j))
+				vertices = addVertices(vertices, pos+18, refinedPoint(i, j), refinedPoint(i, j+1), refinedPoint(i+1, j+1))
+			}
+			wg.Done()
+		}(h)
 	}
-	fmt.Println("addVertices took milliseconds", (time.Now().UnixNano()-start)/1e6)
+	wg.Wait()
+
+	//fmt.Println("addVertices took milliseconds", (time.Now().UnixNano()-start)/1e6)
+
+	//start = time.Now().UnixNano()
 
 	//VAO := createTriangleVAO(vertices, indices)
 	VAO, clearVAOFunc := createTriangleVAO(vertices, nil)
@@ -240,9 +264,10 @@ func drawScene(waveGrid wave.Grid, window *win.Window, camera *cam.FpsCamera, pr
 	//gl.DrawArrays(gl.TRIANGLES, int32(len(indices)), gl.UNSIGNED_INT, unsafe.Pointer(nil))
 	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)))
-	//gl.DrawArrays(gl.TRIANGLES, 0, 48)
+	//gl.DrawArrays(gl.TRIANGLES, 0, 6)
 	gl.BindVertexArray(0)
 	clearVAOFunc()
+	//fmt.Println("half2 took milliseconds", (time.Now().UnixNano()-start)/1e6)
 }
 
 func keyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action,
@@ -265,17 +290,33 @@ func interpolation(x1, y1, x2, y2, x3, y3 float32) func(float32) float32 {
 }
 
 // p_0 and p_1 clockwise
-func normal(p_center, p_0, p_1 mgl32.Vec3) mgl32.Vec3 {
-	return (p_0.Sub(p_center)).Cross(p_1.Sub(p_center)).Normalize().Mul(-1.0)
+func normal(p_center, p_0, p_1 mgl32.Vec3) (x, y, z float32) {
+	return (p_0.Sub(p_center)).Cross(p_1.Sub(p_center)).Normalize().Mul(-1.0).Elem()
 }
 
-func addVertices(vertices []float32, p0, p1, p2 mgl32.Vec3) []float32 {
-	n := normal(p0, p1, p2)
-	vertices = append(vertices,
-		p1.X(), p1.Y(), p1.Z(), n.X(), n.Y(), n.Z(),
-		p2.X(), p2.Y(), p2.Z(), n.X(), n.Y(), n.Z(),
-		p0.X(), p0.Y(), p0.Z(), n.X(), n.Y(), n.Z(),
-	)
+func addVertices(vertices []float32, pos int, p0, p1, p2 mgl32.Vec3) []float32 {
+
+	x, y, z := normal(p0, p1, p2)
+
+	vertices[pos+0] = p1.X()
+	vertices[pos+1] = p1.Y()
+	vertices[pos+2] = p1.Z()
+	vertices[pos+3] = x
+	vertices[pos+4] = y
+	vertices[pos+5] = z
+	vertices[pos+6] = p2.X()
+	vertices[pos+7] = p2.Y()
+	vertices[pos+8] = p2.Z()
+	vertices[pos+9] = x
+	vertices[pos+10] = y
+	vertices[pos+11] = z
+	vertices[pos+12] = p0.X()
+	vertices[pos+13] = p0.Y()
+	vertices[pos+14] = p0.Z()
+	vertices[pos+15] = x
+	vertices[pos+16] = y
+	vertices[pos+17] = z
+
 	return vertices
 }
 
@@ -327,4 +368,13 @@ func refineGrid(grid [][]float64) [][]float64 {
 		}
 	}
 	return refinedGrid
+}
+
+func glClearColor(r, g, b int) {
+	gl.ClearColor(
+		float32(r)/255.0,
+		float32(g)/255.0,
+		float32(b)/255.0,
+		1.0,
+	)
 }
